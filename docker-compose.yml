@@ -1,0 +1,31 @@
+services:
+  keycloak:
+    restart: always
+    image: quay.io/keycloak/keycloak:12.0.4
+    container_name: keycloak
+    environment:
+      - PROXY_ADDRESS_FORWARDING=true
+      - KC_DB_URL=jdbc:postgresql://10.0.0.1:5432/keycloakdb?ssl=false
+      - KC_DB_USERNAME=keycloak
+      - KC_DB_PASSWORD=database-your-password
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=keycloack-admim-password
+      - KEYCLOAK_FRONTEND_URL=https://auth.domain.bo/auth
+    volumes:
+      - ./keycloak_data/standalone:/opt/jboss/keycloak/standalone
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keycloak.rule=Host(`auth.domain.bo`)"
+      - "traefik.http.routers.keycloak.entrypoints=websecure"
+      - "traefik.http.routers.keycloak.tls=true"
+      - "traefik.http.routers.keycloak.tls.certresolver=le"
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+    networks:
+      - traefik-net
+      - traefik-internal
+
+networks:
+  traefik-net:
+    external: true
+  traefik-internal:
+    external: false
